@@ -1,4 +1,3 @@
-
 /* =========================================================
    PLAYFAIR CIPHER - VANILLA JAVASCRIPT
    No libraries, no backend, GitHub Pages compatible.
@@ -31,13 +30,11 @@ function buildMatrix(keyword) {
 
 function positionOf(matrix, letter) {
   const target = letter === "J" ? "I" : letter;
-
   for (let r = 0; r < 5; r++) {
     for (let c = 0; c < 5; c++) {
       if (matrix[r][c] === target) return { row: r, col: c };
     }
   }
-
   return null;
 }
 
@@ -74,7 +71,6 @@ function preparePlaintext(text) {
       i += 2;
     }
   }
-
   return pairs;
 }
 
@@ -159,9 +155,9 @@ function showSteps(containerId, steps) {
 }
 
 /*
-  Removes likely filler X characters for display only.
+  This removes likely filler X characters for display only.
   The exact original plaintext cannot always be recovered
-  because X can be a genuine plaintext character.
+  automatically because X can be a genuine plaintext character.
 */
 function removeLikelyFillers(text) {
   let result = text;
@@ -196,7 +192,6 @@ function encryptMessage() {
     for (const pair of pairs) {
       const r = transformPair(pair, matrix, "encrypt");
       ciphertext += r.result;
-
       steps.push({
         input: pair,
         output: r.result,
@@ -227,16 +222,12 @@ function decryptMessage() {
     const matrix = buildMatrix(key);
     const ciphertext = cleanLetters(input);
 
-    if (!ciphertext.length) {
-      throw new Error("Ciphertext must contain letters.");
-    }
-
+    if (!ciphertext.length) throw new Error("Ciphertext must contain letters.");
     if (ciphertext.length % 2 !== 0) {
       throw new Error("Ciphertext must contain an even number of letters.");
     }
 
     const pairs = [];
-
     for (let i = 0; i < ciphertext.length; i += 2) {
       pairs.push(ciphertext.slice(i, i + 2));
     }
@@ -249,7 +240,6 @@ function decryptMessage() {
     for (const pair of pairs) {
       const r = transformPair(pair, matrix, "decrypt");
       plaintext += r.result;
-
       steps.push({
         input: pair,
         output: r.result,
@@ -260,8 +250,7 @@ function decryptMessage() {
 
     document.getElementById("decryptPairs").textContent = pairs.join(" | ");
     document.getElementById("decryptedText").textContent = plaintext;
-    document.getElementById("cleanedDecryptedText").textContent =
-      removeLikelyFillers(plaintext);
+    document.getElementById("cleanedDecryptedText").textContent = removeLikelyFillers(plaintext);
 
     showSteps("decryptionSteps", steps);
     showStatus("decryptStatus", "Decryption completed successfully.", "ok");
@@ -273,12 +262,10 @@ function decryptMessage() {
 function generateMatrix() {
   try {
     const key = document.getElementById("matrixKey").value;
-
     if (!key.trim()) throw new Error("Enter a keyword.");
 
     const matrix = buildMatrix(key);
     const container = document.getElementById("displayMatrix");
-
     container.classList.remove("empty");
     container.innerHTML = matrixHTML(matrix);
   } catch (error) {
@@ -291,38 +278,26 @@ function generateMatrix() {
 function clearEncryption() {
   document.getElementById("encryptKey").value = "";
   document.getElementById("plaintext").value = "";
-
   document.getElementById("encryptMatrix").className = "matrix-box empty";
-  document.getElementById("encryptMatrix").textContent =
-    "Enter a keyword to generate the matrix.";
-
+  document.getElementById("encryptMatrix").textContent = "Enter a keyword to generate the matrix.";
   document.getElementById("preparedText").textContent = "—";
   document.getElementById("encryptPairs").textContent = "—";
   document.getElementById("ciphertext").textContent = "—";
-
   document.getElementById("encryptionSteps").className = "empty";
-  document.getElementById("encryptionSteps").textContent =
-    "Encrypt a message to see the steps.";
-
+  document.getElementById("encryptionSteps").textContent = "Encrypt a message to see the steps.";
   showStatus("encryptStatus", "");
 }
 
 function clearDecryption() {
   document.getElementById("decryptKey").value = "";
   document.getElementById("cipherInput").value = "";
-
   document.getElementById("decryptMatrix").className = "matrix-box empty";
-  document.getElementById("decryptMatrix").textContent =
-    "Enter a keyword to generate the matrix.";
-
+  document.getElementById("decryptMatrix").textContent = "Enter a keyword to generate the matrix.";
   document.getElementById("decryptPairs").textContent = "—";
   document.getElementById("decryptedText").textContent = "—";
   document.getElementById("cleanedDecryptedText").textContent = "—";
-
   document.getElementById("decryptionSteps").className = "empty";
-  document.getElementById("decryptionSteps").textContent =
-    "Decrypt a message to see the steps.";
-
+  document.getElementById("decryptionSteps").textContent = "Decrypt a message to see the steps.";
   showStatus("decryptStatus", "");
 }
 
@@ -331,10 +306,7 @@ function initHeroMatrix() {
   document.getElementById("heroMatrix").innerHTML = matrixHTML(matrix);
 }
 
-/* ===== INITIALIZE WEBSITE AND LOGIN ===== */
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Initialize the original Playfair Cipher website.
   initHeroMatrix();
 
   document.getElementById("encryptBtn").addEventListener("click", encryptMessage);
@@ -342,37 +314,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("generateMatrixBtn").addEventListener("click", generateMatrix);
   document.getElementById("clearEncryptBtn").addEventListener("click", clearEncryption);
   document.getElementById("clearDecryptBtn").addEventListener("click", clearDecryption);
+
   document.getElementById("matrixKey").addEventListener("input", generateMatrix);
-
-  // Initialize the login form.
-  const loginForm = document.getElementById("loginForm");
-  const loginScreen = document.getElementById("loginScreen");
-  const appShell = document.getElementById("appShell");
-  const loginStatus = document.getElementById("loginStatus");
-  const loginUsername = document.getElementById("loginUsername");
-  const loginPassword = document.getElementById("loginPassword");
-
-  if (!loginForm || !loginScreen || !appShell ||
-      !loginStatus || !loginUsername || !loginPassword) {
-    console.error("Login error: Check the login HTML element IDs.");
-    return;
-  }
-
-  loginForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const username = loginUsername.value.trim();
-    const password = loginPassword.value;
-
-    if (!username || !password) {
-      loginStatus.textContent = "Please enter both fields.";
-      return;
-    }
-
-    loginStatus.textContent = "";
-    loginScreen.hidden = true;
-    appShell.hidden = false;
-
-    window.scrollTo(0, 0);
-  });
 });
