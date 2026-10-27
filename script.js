@@ -317,3 +317,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.getElementById("matrixKey").addEventListener("input", generateMatrix);
 });
+// ===== LOGIN PAGE =====
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
+  const loginScreen = document.getElementById("loginScreen");
+  const appShell = document.getElementById("appShell");
+  const loginStatus = document.getElementById("loginStatus");
+
+  if (!loginForm || !loginScreen || !appShell) return;
+
+  loginForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const username = document
+      .getElementById("loginUsername")
+      .value.trim();
+
+    const password = document
+      .getElementById("loginPassword")
+      .value;
+
+    if (!username || !password) {
+      loginStatus.textContent = "Please enter your username and password.";
+      return;
+    }
+
+    loginStatus.textContent = "";
+
+    loginScreen.hidden = true;
+    appShell.hidden = false;
+
+    // Show the original website from its home section.
+    window.scrollTo(0, 0);
+  });
+});
