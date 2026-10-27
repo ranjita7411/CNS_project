@@ -1,474 +1,940 @@
-/* =========================================================
-   PLAYFAIR CIPHER + DEMO LOGIN
-   No external libraries required.
-   ========================================================= */
-
-const ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
-
-// Convert text to uppercase, combine J with I, and remove
-// spaces, numbers, and punctuation.
-function cleanLetters(value) {
-  return String(value || "")
-    .toUpperCase()
-    .replace(/J/g, "I")
-    .replace(/[^A-Z]/g, "");
+:root {
+  --blue: #2563eb;
+  --blue-dark: #1d4ed8;
+  --blue-light: #eff6ff;
+  --ink: #172033;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --surface: #ffffff;
+  --soft: #f8fafc;
+  --green: #059669;
+  --shadow: 0 18px 50px rgba(15, 23, 42, .08);
+  --radius: 20px;
 }
 
-// Create the 5 x 5 Playfair matrix.
-function buildMatrix(keyword) {
-  const key = cleanLetters(keyword);
+* {
+  box-sizing: border-box;
+}
 
-  if (!key) {
-    throw new Error("Please enter a keyword.");
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 90px;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: #fff;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  line-height: 1.6;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* LOGIN PAGE */
+
+.login-screen {
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding: 32px 18px 68px;
+  background: linear-gradient(
+    135deg,
+    #fff 0%,
+    #f8fbff 55%,
+    #eff6ff 100%
+  );
+}
+
+.login-screen::before,
+.login-screen::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(37, 99, 235, .1);
+  pointer-events: none;
+}
+
+.login-screen::before {
+  width: 480px;
+  height: 480px;
+  top: -250px;
+  right: -120px;
+}
+
+.login-screen::after {
+  width: 360px;
+  height: 360px;
+  bottom: -190px;
+  left: -110px;
+}
+
+.login-decoration {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.decoration-one {
+  width: 180px;
+  height: 180px;
+  top: 12%;
+  left: 12%;
+  background: rgba(219, 234, 254, .45);
+}
+
+.decoration-two {
+  width: 240px;
+  height: 240px;
+  right: 10%;
+  bottom: 12%;
+  background: rgba(239, 246, 255, .8);
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 430px);
+  padding: 38px;
+  border: 1px solid rgba(255, 255, 255, .95);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, .86);
+  box-shadow:
+    0 24px 80px rgba(30, 64, 175, .12),
+    0 0 0 1px rgba(219, 234, 254, .75);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.login-logo {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 18px;
+  margin-bottom: 22px;
+  background: linear-gradient(145deg, #eff6ff, #dbeafe);
+  border: 1px solid #bfdbfe;
+  font-size: 28px;
+}
+
+.login-eyebrow {
+  margin: 0 0 8px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .13em;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: clamp(30px, 6vw, 38px);
+  line-height: 1.15;
+  letter-spacing: -.04em;
+}
+
+.login-subtitle {
+  margin: 12px 0 27px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.login-card form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card label {
+  margin: 0 0 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.login-card input {
+  width: 100%;
+  min-height: 48px;
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #dbe3ef;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+  color: var(--ink);
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.login-card input::placeholder {
+  color: #94a3b8;
+}
+
+.login-card input:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, .12);
+}
+
+.login-submit {
+  width: 100%;
+  justify-content: center;
+  min-height: 49px;
+  margin-top: 2px;
+}
+
+.login-status {
+  min-height: 20px;
+  margin: 10px 0 0;
+  font-size: 13px;
+}
+
+.login-status.success {
+  color: var(--green);
+}
+
+.login-status.error {
+  color: #dc2626;
+}
+
+.login-note {
+  margin: 18px 0 0;
+  padding: 11px 12px;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #64748b;
+  font-size: 11px;
+  text-align: center;
+}
+
+.login-note strong {
+  color: #1d4ed8;
+}
+
+.login-footer {
+  position: absolute;
+  z-index: 1;
+  bottom: 17px;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  color: #94a3b8;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* NAVIGATION */
+
+.navbar {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 13px max(5vw, 20px);
+  border-bottom: 1px solid rgba(226, 232, 240, .9);
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(16px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  flex-shrink: 0;
+}
+
+.brand-icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+  background: var(--blue-light);
+  font-size: 21px;
+}
+
+.brand strong,
+.brand small {
+  display: block;
+}
+
+.brand strong {
+  font-size: 15px;
+  letter-spacing: -.02em;
+}
+
+.brand small {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.navbar nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.navbar nav a {
+  padding: 8px 10px;
+  border-radius: 9px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.navbar nav a:hover {
+  color: var(--blue);
+  background: var(--blue-light);
+}
+
+/* BUTTONS */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 43px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 750;
+  transition: transform .18s, box-shadow .18s, background .18s;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn.primary {
+  color: #fff;
+  background: var(--blue);
+  box-shadow: 0 7px 18px rgba(37, 99, 235, .18);
+}
+
+.btn.primary:hover {
+  background: var(--blue-dark);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, .24);
+}
+
+.btn.secondary {
+  color: #334155;
+  background: #fff;
+  border-color: #cbd5e1;
+}
+
+.btn.secondary:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+}
+
+.btn.success {
+  color: #fff;
+  background: var(--green);
+}
+
+.btn.success:hover {
+  background: #047857;
+}
+
+.btn.full {
+  flex: 1;
+}
+
+/* HOME / HERO */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+  align-items: center;
+  gap: 55px;
+  padding: 78px max(7vw, 24px) 72px;
+  background: radial-gradient(circle at 85% 25%, #eff6ff 0, #fff 42%);
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .13em;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(44px, 7vw, 76px);
+  line-height: 1.04;
+  letter-spacing: -.06em;
+}
+
+.hero h1 span {
+  color: var(--blue);
+}
+
+.hero-text {
+  max-width: 610px;
+  margin: 22px 0 25px;
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 11px;
+}
+
+.hero-card,
+.panel,
+.feature-card,
+.rule-card,
+.details-grid > div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+.hero-card {
+  padding: 23px;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.card-title-row h2 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.card-title-row span {
+  padding: 5px 9px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  color: var(--blue-dark);
+  background: var(--blue-light);
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* SECTIONS */
+
+.section {
+  padding: 72px max(7vw, 24px);
+}
+
+.section-heading {
+  max-width: 750px;
+  margin: 0 auto 34px;
+  text-align: center;
+}
+
+.section-heading h2 {
+  margin: 0 0 12px;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.2;
+  letter-spacing: -.04em;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.intro {
+  background: #fff;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.feature-card {
+  padding: 24px;
+  box-shadow: none;
+}
+
+.feature-icon {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  margin-bottom: 14px;
+  border-radius: 13px;
+  background: var(--blue-light);
+  font-size: 22px;
+}
+
+.feature-card h3,
+.rule-card h3 {
+  margin: 0 0 7px;
+  font-size: 16px;
+}
+
+.feature-card p,
+.rule-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ENCRYPTION AND DECRYPTION PANELS */
+
+.tool-section,
+.tool-section.alternate,
+.rules-section {
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.panel {
+  min-width: 0;
+  padding: 25px;
+}
+
+.panel h3 {
+  margin: 0 0 18px;
+  font-size: 17px;
+}
+
+label {
+  display: block;
+  margin: 0 0 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+input,
+textarea {
+  display: block;
+  width: 100%;
+  margin: 0 0 18px;
+  padding: 12px 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  outline: none;
+  color: var(--ink);
+  background: #fff;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+}
+
+input:focus,
+textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, .15);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 110px;
+}
+
+.button-row {
+  display: flex;
+  gap: 10px;
+}
+
+.status {
+  min-height: 20px;
+  margin: 12px 0 0;
+  font-size: 12px;
+}
+
+.status.ok {
+  color: var(--green);
+}
+
+.status.error {
+  color: #dc2626;
+}
+
+/* PLAYFAIR MATRIX */
+
+.matrix {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 5px;
+  width: 100%;
+  max-width: 290px;
+  margin: 0 auto;
+}
+
+.matrix div {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 1px solid #dbeafe;
+  border-radius: 8px;
+  color: #1e3a8a;
+  background: #f8fbff;
+  font-size: 16px;
+  font-weight: 800;
+  transition: background .15s, border-color .15s;
+}
+
+.matrix div:hover {
+  background: #eaf2ff;
+  border-color: #93c5fd;
+}
+
+.small-matrix {
+  max-width: 255px;
+}
+
+.matrix-box,
+.matrix-large-box {
+  display: grid;
+  place-items: center;
+  min-height: 155px;
+  padding: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 13px;
+  background: #fff;
+}
+
+.matrix-box.empty,
+.matrix-large-box.empty,
+.empty {
+  color: #94a3b8;
+  font-size: 13px;
+  text-align: center;
+}
+
+/* RESULTS */
+
+.result-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 13px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #f8fafc;
+  overflow-wrap: anywhere;
+}
+
+.result-box span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.result-box strong {
+  color: var(--ink);
+  font-size: 14px;
+  letter-spacing: .02em;
+}
+
+.highlight {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.highlight strong {
+  color: #1d4ed8;
+}
+
+.success-box {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+}
+
+.success-box strong {
+  color: #047857;
+}
+
+.steps-panel {
+  margin-top: 20px;
+}
+
+.step {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  align-items: start;
+  gap: 12px;
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.step:last-child {
+  border-bottom: none;
+}
+
+.step-no {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.step h4 {
+  margin: 0 0 5px;
+  font-size: 13px;
+}
+
+.step p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* MATRIX GENERATOR */
+
+.matrix-generator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 720px;
+  margin: 0 auto 20px;
+}
+
+.matrix-generator input {
+  flex: 1;
+  margin: 0;
+}
+
+.matrix-large-box {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.matrix-large-box .matrix {
+  max-width: 390px;
+}
+
+/* RULES */
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.rule-card {
+  display: flex;
+  gap: 17px;
+  padding: 22px;
+  box-shadow: none;
+}
+
+.rule-number {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.rule-card code {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  color: #1e40af;
+  background: #eff6ff;
+  font-size: 11px;
+}
+
+/* HISTORY */
+
+.history {
+  padding: 70px max(7vw, 24px);
+  color: #fff;
+  background: #1e3a8a;
+}
+
+.history .section-heading {
+  margin-bottom: 0;
+}
+
+.history .section-heading h2 {
+  color: #fff;
+}
+
+.history .section-heading p {
+  color: #dbeafe;
+}
+
+.eyebrow.light {
+  color: #bfdbfe;
+}
+
+/* ABOUT AND FOOTER */
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.details-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 20px;
+  box-shadow: none;
+}
+
+.details-grid span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.details-grid strong {
+  font-size: 13px;
+}
+
+footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 23px max(7vw, 24px);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  background: #fff;
+  font-size: 12px;
+}
+
+footer strong {
+  color: var(--ink);
+}
+
+/* RESPONSIVE DESIGN */
+
+@media (max-width: 900px) {
+  .navbar {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  let sequence = "";
-
-  for (const ch of key + ALPHABET) {
-    if (!sequence.includes(ch)) {
-      sequence += ch;
-    }
+  .navbar nav {
+    justify-content: flex-start;
   }
 
-  const matrix = [];
-
-  for (let r = 0; r < 5; r++) {
-    matrix.push(sequence.slice(r * 5, r * 5 + 5).split(""));
+  .hero {
+    grid-template-columns: 1fr;
+    gap: 30px;
   }
 
-  return matrix;
-}
-
-// Find a letter's position in the matrix.
-function positionOf(matrix, letter) {
-  const target = letter === "J" ? "I" : letter;
-
-  for (let r = 0; r < 5; r++) {
-    for (let c = 0; c < 5; c++) {
-      if (matrix[r][c] === target) {
-        return { row: r, col: c };
-      }
-    }
+  .hero-card {
+    max-width: 520px;
+    width: 100%;
   }
 
-  return null;
-}
-
-// Create the HTML for the matrix.
-function matrixHTML(matrix) {
-  return `<div class="matrix">${
-    matrix.flat().map(ch => `<div>${ch}</div>`).join("")
-  }</div>`;
-}
-
-// Prepare plaintext into letter pairs.
-// Repeated letters in a pair are separated with X.
-// An unmatched final letter gets X.
-function preparePlaintext(text) {
-  const cleaned = cleanLetters(text);
-  const pairs = [];
-  let i = 0;
-
-  while (i < cleaned.length) {
-    const a = cleaned[i];
-    const b = cleaned[i + 1];
-
-    if (!b) {
-      pairs.push(a + "X");
-      i++;
-    } else if (a === b) {
-      pairs.push(a + "X");
-      i++;
-    } else {
-      pairs.push(a + b);
-      i += 2;
-    }
-  }
-
-  return pairs;
-}
-
-// Apply Playfair rules to one pair.
-function transformPair(pair, matrix, mode) {
-  const a = pair[0];
-  const b = pair[1];
-
-  const p1 = positionOf(matrix, a);
-  const p2 = positionOf(matrix, b);
-
-  if (!p1 || !p2) {
-    throw new Error(`Invalid pair: ${pair}`);
-  }
-
-  // Encryption moves right/down.
-  // Decryption moves left/up.
-  const direction = mode === "encrypt" ? 1 : -1;
-
-  // RULE 1: Both letters are in the same row.
-  if (p1.row === p2.row) {
-    const a2 = matrix[p1.row][
-      (p1.col + direction + 5) % 5
-    ];
-
-    const b2 = matrix[p2.row][
-      (p2.col + direction + 5) % 5
-    ];
-
-    return {
-      result: a2 + b2,
-      rule: "Same row",
-      explanation: mode === "encrypt"
-        ? "Both letters are in the same row, so each moves one position to the right."
-        : "Both letters are in the same row, so each moves one position to the left."
-    };
-  }
-
-  // RULE 2: Both letters are in the same column.
-  if (p1.col === p2.col) {
-    const a2 = matrix[
-      (p1.row + direction + 5) % 5
-    ][p1.col];
-
-    const b2 = matrix[
-      (p2.row + direction + 5) % 5
-    ][p2.col];
-
-    return {
-      result: a2 + b2,
-      rule: "Same column",
-      explanation: mode === "encrypt"
-        ? "Both letters are in the same column, so each moves one position downward."
-        : "Both letters are in the same column, so each moves one position upward."
-    };
-  }
-
-  // RULE 3: Rectangle rule.
-  const a2 = matrix[p1.row][p2.col];
-  const b2 = matrix[p2.row][p1.col];
-
-  return {
-    result: a2 + b2,
-    rule: "Rectangle rule",
-    explanation:
-      "The letters form a rectangle; each letter keeps its row and takes the other letter's column."
-  };
-}
-
-// Display a generated matrix.
-function setMatrix(containerId, matrix) {
-  const el = document.getElementById(containerId);
-
-  el.classList.remove("empty");
-  el.innerHTML = matrixHTML(matrix);
-}
-
-// Display a success or error message.
-function showStatus(id, message, type = "") {
-  const el = document.getElementById(id);
-
-  el.textContent = message;
-  el.className = `status ${type}`;
-}
-
-// Display algorithm steps.
-function showSteps(containerId, steps) {
-  const el = document.getElementById(containerId);
-
-  if (!steps.length) {
-    el.className = "empty";
-    el.textContent = "No steps available.";
-    return;
-  }
-
-  el.className = "";
-
-  el.innerHTML = steps.map((s, i) => `
-    <div class="step">
-      <div class="step-no">${i + 1}</div>
-      <div>
-        <h4>${s.input} → ${s.output}</h4>
-        <p>
-          <strong>${s.rule}</strong> — ${s.explanation}
-        </p>
-      </div>
-    </div>
-  `).join("");
-}
-
-// Remove likely filler X characters for display.
-// This is only an estimate because X can be a real letter.
-function removeLikelyFillers(text) {
-  let result = text;
-
-  result = result.replace(/([A-Z])X\1/g, "$1$1");
-
-  if (result.endsWith("X")) {
-    result = result.slice(0, -1);
-  }
-
-  return result;
-}
-
-// ENCRYPTION
-function encryptMessage() {
-  try {
-    const key = document.getElementById("encryptKey").value;
-    const plaintext = document.getElementById("plaintext").value;
-
-    if (!key.trim()) {
-      throw new Error("Enter a keyword.");
-    }
-
-    if (!plaintext.trim()) {
-      throw new Error("Enter plaintext.");
-    }
-
-    const matrix = buildMatrix(key);
-    const pairs = preparePlaintext(plaintext);
-
-    if (!pairs.length) {
-      throw new Error("Plaintext must contain letters.");
-    }
-
-    setMatrix("encryptMatrix", matrix);
-
-    let ciphertext = "";
-    const steps = [];
-
-    for (const pair of pairs) {
-      const result = transformPair(pair, matrix, "encrypt");
-
-      ciphertext += result.result;
-
-      steps.push({
-        input: pair,
-        output: result.result,
-        rule: result.rule,
-        explanation: result.explanation
-      });
-    }
-
-    document.getElementById("preparedText").textContent =
-      pairs.join(" ");
-
-    document.getElementById("encryptPairs").textContent =
-      pairs.join(" | ");
-
-    document.getElementById("ciphertext").textContent =
-      ciphertext;
-
-    showSteps("encryptionSteps", steps);
-
-    showStatus(
-      "encryptStatus",
-      "Encryption completed successfully.",
-      "ok"
-    );
-  } catch (error) {
-    showStatus("encryptStatus", error.message, "error");
+  .details-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-// DECRYPTION
-function decryptMessage() {
-  try {
-    const key = document.getElementById("decryptKey").value;
-    const input = document.getElementById("cipherInput").value;
+@media (max-width: 650px) {
+  .login-card {
+    padding: 27px 22px;
+  }
 
-    if (!key.trim()) {
-      throw new Error("Enter a keyword.");
-    }
+  .hero,
+  .section,
+  .history {
+    padding: 48px 20px;
+  }
 
-    if (!input.trim()) {
-      throw new Error("Enter ciphertext.");
-    }
+  .feature-grid,
+  .tool-grid,
+  .rules-grid {
+    grid-template-columns: 1fr;
+  }
 
-    const matrix = buildMatrix(key);
-    const ciphertext = cleanLetters(input);
+  .panel {
+    padding: 19px;
+  }
 
-    if (!ciphertext.length) {
-      throw new Error("Ciphertext must contain letters.");
-    }
+  .matrix-generator {
+    align-items: stretch;
+    flex-direction: column;
+  }
 
-    if (ciphertext.length % 2 !== 0) {
-      throw new Error(
-        "Ciphertext must contain an even number of letters."
-      );
-    }
+  .matrix-generator button {
+    width: 100%;
+  }
 
-    const pairs = [];
+  .button-row {
+    flex-direction: column;
+  }
 
-    for (let i = 0; i < ciphertext.length; i += 2) {
-      pairs.push(ciphertext.slice(i, i + 2));
-    }
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
 
-    setMatrix("decryptMatrix", matrix);
-
-    let plaintext = "";
-    const steps = [];
-
-    for (const pair of pairs) {
-      const result = transformPair(pair, matrix, "decrypt");
-
-      plaintext += result.result;
-
-      steps.push({
-        input: pair,
-        output: result.result,
-        rule: result.rule,
-        explanation: result.explanation
-      });
-    }
-
-    document.getElementById("decryptPairs").textContent =
-      pairs.join(" | ");
-
-    document.getElementById("decryptedText").textContent =
-      plaintext;
-
-    document.getElementById("cleanedDecryptedText").textContent =
-      removeLikelyFillers(plaintext);
-
-    showSteps("decryptionSteps", steps);
-
-    showStatus(
-      "decryptStatus",
-      "Decryption completed successfully.",
-      "ok"
-    );
-  } catch (error) {
-    showStatus("decryptStatus", error.message, "error");
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
-
-// MATRIX GENERATOR
-function generateMatrix() {
-  try {
-    const key = document.getElementById("matrixKey").value;
-
-    if (!key.trim()) {
-      throw new Error("Enter a keyword.");
-    }
-
-    const matrix = buildMatrix(key);
-    const container = document.getElementById("displayMatrix");
-
-    container.classList.remove("empty");
-    container.innerHTML = matrixHTML(matrix);
-  } catch (error) {
-    const container = document.getElementById("displayMatrix");
-
-    container.className = "matrix-large-box empty";
-    container.textContent = error.message;
-  }
-}
-
-// CLEAR ENCRYPTION FIELDS
-function clearEncryption() {
-  document.getElementById("encryptKey").value = "";
-  document.getElementById("plaintext").value = "";
-
-  document.getElementById("encryptMatrix").className =
-    "matrix-box empty";
-
-  document.getElementById("encryptMatrix").textContent =
-    "Enter a keyword to generate the matrix.";
-
-  document.getElementById("preparedText").textContent = "—";
-  document.getElementById("encryptPairs").textContent = "—";
-  document.getElementById("ciphertext").textContent = "—";
-
-  document.getElementById("encryptionSteps").className = "empty";
-
-  document.getElementById("encryptionSteps").textContent =
-    "Encrypt a message to see the steps.";
-
-  showStatus("encryptStatus", "");
-}
-
-// CLEAR DECRYPTION FIELDS
-function clearDecryption() {
-  document.getElementById("decryptKey").value = "";
-  document.getElementById("cipherInput").value = "";
-
-  document.getElementById("decryptMatrix").className =
-    "matrix-box empty";
-
-  document.getElementById("decryptMatrix").textContent =
-    "Enter a keyword to generate the matrix.";
-
-  document.getElementById("decryptPairs").textContent = "—";
-  document.getElementById("decryptedText").textContent = "—";
-  document.getElementById("cleanedDecryptedText").textContent = "—";
-
-  document.getElementById("decryptionSteps").className = "empty";
-
-  document.getElementById("decryptionSteps").textContent =
-    "Decrypt a message to see the steps.";
-
-  showStatus("decryptStatus", "");
-}
-
-// INITIAL EXAMPLE MATRIX
-function initHeroMatrix() {
-  const matrix = buildMatrix("MONARCHY");
-
-  document.getElementById("heroMatrix").innerHTML =
-    matrixHTML(matrix);
-}
-
-// SET UP LOGIN AND BUTTONS
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const loginScreen = document.getElementById("loginScreen");
-  const appShell = document.getElementById("appShell");
-  const loginStatus = document.getElementById("loginStatus");
-
-  // Demo-only login check.
-  loginForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const username =
-      document.getElementById("loginUsername").value.trim();
-
-    const password =
-      document.getElementById("loginPassword").value;
-
-    if (username === "demo" && password === "playfair123") {
-      loginStatus.textContent =
-        "Login successful. Opening your project…";
-
-      loginStatus.className = "login-status success";
-
-      loginScreen.hidden = true;
-      appShell.hidden = false;
-
-      initHeroMatrix();
-    } else {
-      loginStatus.textContent =
-        "Incorrect username or password. Please try again.";
-
-      loginStatus.className = "login-status error";
-    }
-  });
-
-  initHeroMatrix();
-
-  document.getElementById("encryptBtn")
-    .addEventListener("click", encryptMessage);
-
-  document.getElementById("decryptBtn")
-    .addEventListener("click", decryptMessage);
-
-  document.getElementById("generateMatrixBtn")
-    .addEventListener("click", generateMatrix);
-
-  document.getElementById("clearEncryptBtn")
-    .addEventListener("click", clearEncryption);
-
-  document.getElementById("clearDecryptBtn")
-    .addEventListener("click", clearDecryption);
-
-  document.getElementById("matrixKey")
-    .addEventListener("input", generateMatrix);
-});
