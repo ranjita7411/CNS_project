@@ -1,319 +1,270 @@
-/* =========================================================
-   PLAYFAIR CIPHER - VANILLA JAVASCRIPT
-   No libraries, no backend, GitHub Pages compatible.
-   ========================================================= */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive Playfair Cipher implementation for Cryptography and Network Security">
+  <title>Playfair Cipher | CNS VTU Project</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="navbar">
+    <a class="brand" href="#home">
+      <span class="brand-icon">🔐</span>
+      <span>
+        <strong>Playfair Cipher</strong>
+        <small>Cryptography &amp; Network Security</small>
+      </span>
+    </a>
+    <nav>
+      <a href="#home">Home</a>
+      <a href="#encrypt">Encrypt</a>
+      <a href="#decrypt">Decrypt</a>
+      <a href="#matrix">Matrix</a>
+      <a href="#rules">Rules</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
 
-const ALPHABET = "ABCDEFGHIKLMNOPQRSTUVWXYZ"; // J is combined with I
-
-function cleanLetters(value) {
-  return String(value || "")
-    .toUpperCase()
-    .replace(/J/g, "I")
-    .replace(/[^A-Z]/g, "");
-}
-
-function buildMatrix(keyword) {
-  const key = cleanLetters(keyword);
-  if (!key) throw new Error("Please enter a keyword.");
-
-  let sequence = "";
-  for (const ch of key + ALPHABET) {
-    if (!sequence.includes(ch)) sequence += ch;
-  }
-
-  const matrix = [];
-  for (let r = 0; r < 5; r++) {
-    matrix.push(sequence.slice(r * 5, r * 5 + 5).split(""));
-  }
-  return matrix;
-}
-
-function positionOf(matrix, letter) {
-  const target = letter === "J" ? "I" : letter;
-  for (let r = 0; r < 5; r++) {
-    for (let c = 0; c < 5; c++) {
-      if (matrix[r][c] === target) return { row: r, col: c };
-    }
-  }
-  return null;
-}
-
-function matrixHTML(matrix) {
-  return `<div class="matrix">${
-    matrix.flat().map(ch => `<div>${ch}</div>`).join("")
-  }</div>`;
-}
-
-/*
-  Plaintext preparation:
-  - J becomes I.
-  - Non-letters are removed.
-  - Repeated letters in one pair are separated with X.
-  - An unmatched final letter gets X.
-*/
-function preparePlaintext(text) {
-  const cleaned = cleanLetters(text);
-  const pairs = [];
-  let i = 0;
-
-  while (i < cleaned.length) {
-    const a = cleaned[i];
-    const b = cleaned[i + 1];
-
-    if (!b) {
-      pairs.push(a + "X");
-      i++;
-    } else if (a === b) {
-      pairs.push(a + "X");
-      i++;
-    } else {
-      pairs.push(a + b);
-      i += 2;
-    }
-  }
-  return pairs;
-}
-
-function transformPair(pair, matrix, mode) {
-  const a = pair[0];
-  const b = pair[1];
-  const p1 = positionOf(matrix, a);
-  const p2 = positionOf(matrix, b);
-
-  if (!p1 || !p2) throw new Error(`Invalid pair: ${pair}`);
-
-  // Encryption: right/down. Decryption: left/up.
-  const direction = mode === "encrypt" ? 1 : -1;
-
-  if (p1.row === p2.row) {
-    const a2 = matrix[p1.row][(p1.col + direction + 5) % 5];
-    const b2 = matrix[p2.row][(p2.col + direction + 5) % 5];
-
-    return {
-      result: a2 + b2,
-      rule: "Same row",
-      explanation: mode === "encrypt"
-        ? "Both letters are in the same row, so each moves one position to the right."
-        : "Both letters are in the same row, so each moves one position to the left."
-    };
-  }
-
-  if (p1.col === p2.col) {
-    const a2 = matrix[(p1.row + direction + 5) % 5][p1.col];
-    const b2 = matrix[(p2.row + direction + 5) % 5][p2.col];
-
-    return {
-      result: a2 + b2,
-      rule: "Same column",
-      explanation: mode === "encrypt"
-        ? "Both letters are in the same column, so each moves one position downward."
-        : "Both letters are in the same column, so each moves one position upward."
-    };
-  }
-
-  const a2 = matrix[p1.row][p2.col];
-  const b2 = matrix[p2.row][p1.col];
-
-  return {
-    result: a2 + b2,
-    rule: "Rectangle rule",
-    explanation: "The letters form a rectangle; each letter keeps its row and takes the other letter's column."
-  };
-}
-
-function setMatrix(containerId, matrix) {
-  const el = document.getElementById(containerId);
-  el.classList.remove("empty");
-  el.innerHTML = matrixHTML(matrix);
-}
-
-function showStatus(id, message, type = "") {
-  const el = document.getElementById(id);
-  el.textContent = message;
-  el.className = `status ${type}`;
-}
-
-function showSteps(containerId, steps) {
-  const el = document.getElementById(containerId);
-
-  if (!steps.length) {
-    el.className = "empty";
-    el.textContent = "No steps available.";
-    return;
-  }
-
-  el.className = "";
-  el.innerHTML = steps.map((s, i) => `
-    <div class="step">
-      <div class="step-no">${i + 1}</div>
+  <main>
+    <section id="home" class="hero">
       <div>
-        <h4>${s.input} → ${s.output}</h4>
-        <p><strong>${s.rule}</strong> — ${s.explanation}</p>
+        <span class="eyebrow">VTU • CRYPTOGRAPHY &amp; NETWORK SECURITY</span>
+        <h1>Playfair <span>Cipher</span></h1>
+        <p class="hero-text">
+          An interactive web implementation of the classical Playfair digraph
+          substitution cipher. Generate the 5 × 5 key matrix, encrypt and
+          decrypt messages, and inspect every step of the algorithm.
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="#encrypt">Start Encryption</a>
+          <a class="btn secondary" href="#rules">View Rules</a>
+        </div>
       </div>
-    </div>
-  `).join("");
-}
 
-/*
-  This removes likely filler X characters for display only.
-  The exact original plaintext cannot always be recovered
-  automatically because X can be a genuine plaintext character.
-*/
-function removeLikelyFillers(text) {
-  let result = text;
+      <div class="hero-card">
+        <div class="card-title-row">
+          <h2>Example Matrix</h2>
+          <span>MONARCHY</span>
+        </div>
+        <div id="heroMatrix" class="matrix small-matrix"></div>
+        <p class="muted">I and J share one position.</p>
+      </div>
+    </section>
 
-  // X inserted between two equal letters, e.g. AXA -> AA
-  result = result.replace(/([A-Z])X\1/g, "$1$1");
+    <section class="section intro">
+      <div class="section-heading">
+        <span class="eyebrow">INTRODUCTION</span>
+        <h2>What is the Playfair Cipher?</h2>
+        <p>
+          Playfair encrypts plaintext two letters at a time, treating each pair
+          as a digraph. A keyword is used to construct a 5 × 5 matrix, with
+          I/J sharing one cell.
+        </p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-icon">🔢</div>
+          <h3>Digraph Encryption</h3>
+          <p>Two plaintext letters are processed together instead of one at a time.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">⬜</div>
+          <h3>5 × 5 Matrix</h3>
+          <p>The keyword and remaining alphabet form a 25-cell Playfair matrix.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon">🔑</div>
+          <h3>Keyword Based</h3>
+          <p>The keyword determines the order of letters in the cipher matrix.</p>
+        </article>
+      </div>
+    </section>
 
-  // X added as a final padding character
-  if (result.endsWith("X")) result = result.slice(0, -1);
+    <section id="encrypt" class="section tool-section">
+      <div class="section-heading">
+        <span class="eyebrow">ENCRYPTION</span>
+        <h2>Encrypt a Message</h2>
+        <p>Enter a keyword and plaintext. The application shows preparation, pairs, matrix and every encryption rule used.</p>
+      </div>
 
-  return result;
-}
+      <div class="tool-grid">
+        <div class="panel">
+          <label for="encryptKey">🔑 Keyword</label>
+          <input id="encryptKey" type="text" placeholder="Example: MONARCHY" autocomplete="off">
 
-function encryptMessage() {
-  try {
-    const key = document.getElementById("encryptKey").value;
-    const plaintext = document.getElementById("plaintext").value;
+          <label for="plaintext">📝 Plaintext</label>
+          <textarea id="plaintext" rows="7" placeholder="Example: BALLOON"></textarea>
 
-    if (!key.trim()) throw new Error("Enter a keyword.");
-    if (!plaintext.trim()) throw new Error("Enter plaintext.");
+          <div class="button-row">
+            <button id="encryptBtn" class="btn primary full">Encrypt Message</button>
+            <button id="clearEncryptBtn" class="btn secondary full">Clear</button>
+          </div>
+          <p id="encryptStatus" class="status" aria-live="polite"></p>
+        </div>
 
-    const matrix = buildMatrix(key);
-    const pairs = preparePlaintext(plaintext);
+        <div class="panel">
+          <h3>Generated Matrix</h3>
+          <div id="encryptMatrix" class="matrix-box empty">Enter a keyword to generate the matrix.</div>
 
-    if (!pairs.length) throw new Error("Plaintext must contain letters.");
+          <div class="result-box">
+            <span>Prepared Plaintext</span>
+            <strong id="preparedText">—</strong>
+          </div>
+          <div class="result-box">
+            <span>Digraphs</span>
+            <strong id="encryptPairs">—</strong>
+          </div>
+          <div class="result-box highlight">
+            <span>🔐 Ciphertext</span>
+            <strong id="ciphertext">—</strong>
+          </div>
+        </div>
+      </div>
 
-    setMatrix("encryptMatrix", matrix);
+      <div class="panel steps-panel">
+        <h3>Encryption Steps</h3>
+        <div id="encryptionSteps" class="empty">Encrypt a message to see the steps.</div>
+      </div>
+    </section>
 
-    let ciphertext = "";
-    const steps = [];
+    <section id="decrypt" class="section tool-section alternate">
+      <div class="section-heading">
+        <span class="eyebrow">DECRYPTION</span>
+        <h2>Decrypt a Message</h2>
+        <p>Use the same keyword to reverse the Playfair transformation.</p>
+      </div>
 
-    for (const pair of pairs) {
-      const r = transformPair(pair, matrix, "encrypt");
-      ciphertext += r.result;
-      steps.push({
-        input: pair,
-        output: r.result,
-        rule: r.rule,
-        explanation: r.explanation
-      });
-    }
+      <div class="tool-grid">
+        <div class="panel">
+          <label for="decryptKey">🔑 Keyword</label>
+          <input id="decryptKey" type="text" placeholder="Example: MONARCHY" autocomplete="off">
 
-    document.getElementById("preparedText").textContent = pairs.join(" ");
-    document.getElementById("encryptPairs").textContent = pairs.join(" | ");
-    document.getElementById("ciphertext").textContent = ciphertext;
+          <label for="cipherInput">🔒 Ciphertext</label>
+          <textarea id="cipherInput" rows="7" placeholder="Example: CKGX..."></textarea>
 
-    showSteps("encryptionSteps", steps);
-    showStatus("encryptStatus", "Encryption completed successfully.", "ok");
-  } catch (error) {
-    showStatus("encryptStatus", error.message, "error");
-  }
-}
+          <div class="button-row">
+            <button id="decryptBtn" class="btn success full">Decrypt Message</button>
+            <button id="clearDecryptBtn" class="btn secondary full">Clear</button>
+          </div>
+          <p id="decryptStatus" class="status" aria-live="polite"></p>
+        </div>
 
-function decryptMessage() {
-  try {
-    const key = document.getElementById("decryptKey").value;
-    const input = document.getElementById("cipherInput").value;
+        <div class="panel">
+          <h3>Generated Matrix</h3>
+          <div id="decryptMatrix" class="matrix-box empty">Enter a keyword to generate the matrix.</div>
 
-    if (!key.trim()) throw new Error("Enter a keyword.");
-    if (!input.trim()) throw new Error("Enter ciphertext.");
+          <div class="result-box">
+            <span>Ciphertext Pairs</span>
+            <strong id="decryptPairs">—</strong>
+          </div>
+          <div class="result-box highlight success-box">
+            <span>🔓 Decrypted Plaintext</span>
+            <strong id="decryptedText">—</strong>
+          </div>
+          <div class="result-box">
+            <span>Optional: Remove likely filler X</span>
+            <strong id="cleanedDecryptedText">—</strong>
+          </div>
+        </div>
+      </div>
 
-    const matrix = buildMatrix(key);
-    const ciphertext = cleanLetters(input);
+      <div class="panel steps-panel">
+        <h3>Decryption Steps</h3>
+        <div id="decryptionSteps" class="empty">Decrypt a message to see the steps.</div>
+      </div>
+    </section>
 
-    if (!ciphertext.length) throw new Error("Ciphertext must contain letters.");
-    if (ciphertext.length % 2 !== 0) {
-      throw new Error("Ciphertext must contain an even number of letters.");
-    }
+    <section id="matrix" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">MATRIX GENERATOR</span>
+        <h2>Generate a 5 × 5 Matrix</h2>
+        <p>Try different keywords and see how the Playfair matrix changes.</p>
+      </div>
 
-    const pairs = [];
-    for (let i = 0; i < ciphertext.length; i += 2) {
-      pairs.push(ciphertext.slice(i, i + 2));
-    }
+      <div class="matrix-generator panel">
+        <input id="matrixKey" type="text" placeholder="Enter keyword..." autocomplete="off">
+        <button id="generateMatrixBtn" class="btn primary">Generate Matrix</button>
+      </div>
+      <div id="displayMatrix" class="matrix-large-box empty">Your matrix will appear here.</div>
+    </section>
 
-    setMatrix("decryptMatrix", matrix);
+    <section id="rules" class="section rules-section">
+      <div class="section-heading">
+        <span class="eyebrow">ALGORITHM</span>
+        <h2>Rules of the Playfair Cipher</h2>
+        <p>These are the rules implemented by the website.</p>
+      </div>
 
-    let plaintext = "";
-    const steps = [];
+      <div class="rules-grid">
+        <article class="rule-card">
+          <span class="rule-number">01</span>
+          <div>
+            <h3>Repeated letters</h3>
+            <p>When both letters of a digraph are the same, insert a filler letter, normally X, between them.</p>
+            <code>BALLOON → BA LX LO ON</code>
+          </div>
+        </article>
+        <article class="rule-card">
+          <span class="rule-number">02</span>
+          <div>
+            <h3>Same row</h3>
+            <p>Replace each letter by the letter immediately to its right. The row wraps around at the end.</p>
+            <code>Right shift → circular wrap</code>
+          </div>
+        </article>
+        <article class="rule-card">
+          <span class="rule-number">03</span>
+          <div>
+            <h3>Same column</h3>
+            <p>Replace each letter by the letter immediately below it. The column wraps around at the bottom.</p>
+            <code>Down shift → circular wrap</code>
+          </div>
+        </article>
+        <article class="rule-card">
+          <span class="rule-number">04</span>
+          <div>
+            <h3>Rectangle rule</h3>
+            <p>For letters in different rows and columns, keep each row and exchange the columns.</p>
+            <code>HS → BP in the MONARCHY matrix</code>
+          </div>
+        </article>
+      </div>
+    </section>
 
-    for (const pair of pairs) {
-      const r = transformPair(pair, matrix, "decrypt");
-      plaintext += r.result;
-      steps.push({
-        input: pair,
-        output: r.result,
-        rule: r.rule,
-        explanation: r.explanation
-      });
-    }
+    <section class="history">
+      <div class="section-heading">
+        <span class="eyebrow light">HISTORY</span>
+        <h2>A Classical Encryption Technique</h2>
+        <p>
+          Playfair was historically used as a field cipher and was used by the
+          British Army during World War I and by Allied forces during World War II.
+          It is more resistant to simple single-letter frequency analysis because
+          it operates on digraphs, although it is not considered secure by modern standards.
+        </p>
+      </div>
+    </section>
 
-    document.getElementById("decryptPairs").textContent = pairs.join(" | ");
-    document.getElementById("decryptedText").textContent = plaintext;
-    document.getElementById("cleanedDecryptedText").textContent = removeLikelyFillers(plaintext);
+    <section id="about" class="section">
+      <div class="section-heading">
+        <span class="eyebrow">PROJECT</span>
+        <h2>About This Project</h2>
+        <p>Interactive implementation for a VTU Cryptography &amp; Network Security project.</p>
+      </div>
+      <div class="details-grid">
+        <div><span>Subject</span><strong>Cryptography &amp; Network Security</strong></div>
+        <div><span>Platform</span><strong>GitHub Pages</strong></div>
+        <div><span>Technology</span><strong>HTML • CSS • JavaScript</strong></div>
+        <div><span>Cipher</span><strong>Playfair Digraph Cipher</strong></div>
+      </div>
+    </section>
+  </main>
 
-    showSteps("decryptionSteps", steps);
-    showStatus("decryptStatus", "Decryption completed successfully.", "ok");
-  } catch (error) {
-    showStatus("decryptStatus", error.message, "error");
-  }
-}
+  <footer>
+    <strong>🔐 Playfair Cipher</strong>
+    <span>VTU Cryptography &amp; Network Security Project</span>
+  </footer>
 
-function generateMatrix() {
-  try {
-    const key = document.getElementById("matrixKey").value;
-    if (!key.trim()) throw new Error("Enter a keyword.");
-
-    const matrix = buildMatrix(key);
-    const container = document.getElementById("displayMatrix");
-    container.classList.remove("empty");
-    container.innerHTML = matrixHTML(matrix);
-  } catch (error) {
-    const container = document.getElementById("displayMatrix");
-    container.className = "matrix-large-box empty";
-    container.textContent = error.message;
-  }
-}
-
-function clearEncryption() {
-  document.getElementById("encryptKey").value = "";
-  document.getElementById("plaintext").value = "";
-  document.getElementById("encryptMatrix").className = "matrix-box empty";
-  document.getElementById("encryptMatrix").textContent = "Enter a keyword to generate the matrix.";
-  document.getElementById("preparedText").textContent = "—";
-  document.getElementById("encryptPairs").textContent = "—";
-  document.getElementById("ciphertext").textContent = "—";
-  document.getElementById("encryptionSteps").className = "empty";
-  document.getElementById("encryptionSteps").textContent = "Encrypt a message to see the steps.";
-  showStatus("encryptStatus", "");
-}
-
-function clearDecryption() {
-  document.getElementById("decryptKey").value = "";
-  document.getElementById("cipherInput").value = "";
-  document.getElementById("decryptMatrix").className = "matrix-box empty";
-  document.getElementById("decryptMatrix").textContent = "Enter a keyword to generate the matrix.";
-  document.getElementById("decryptPairs").textContent = "—";
-  document.getElementById("decryptedText").textContent = "—";
-  document.getElementById("cleanedDecryptedText").textContent = "—";
-  document.getElementById("decryptionSteps").className = "empty";
-  document.getElementById("decryptionSteps").textContent = "Decrypt a message to see the steps.";
-  showStatus("decryptStatus", "");
-}
-
-function initHeroMatrix() {
-  const matrix = buildMatrix("MONARCHY");
-  document.getElementById("heroMatrix").innerHTML = matrixHTML(matrix);
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  initHeroMatrix();
-
-  document.getElementById("encryptBtn").addEventListener("click", encryptMessage);
-  document.getElementById("decryptBtn").addEventListener("click", decryptMessage);
-  document.getElementById("generateMatrixBtn").addEventListener("click", generateMatrix);
-  document.getElementById("clearEncryptBtn").addEventListener("click", clearEncryption);
-  document.getElementById("clearDecryptBtn").addEventListener("click", clearDecryption);
-
-  document.getElementById("matrixKey").addEventListener("input", generateMatrix);
-});
+  <script src="script.js"></script>
+</body>
+</html>      ill tell u what is this until wait dont ask anything
